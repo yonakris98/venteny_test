@@ -1,0 +1,29 @@
+name: venteny_test
+description: A new Flutter project.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  dio: ^5.8.0+1
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.0.0
+  freezed: ^2.5.2
+  json_serializable: ^6.8.0
+  sqflite: ^2.3.2
+  path: ^1.8.0
+  connectivity_plus: ^5.0.2
+  bloc_test: ^10.0.0
+  mocktail: ^1.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  build_runner: ^2.4.9
+
+flutter:
+  uses-material-design: true
