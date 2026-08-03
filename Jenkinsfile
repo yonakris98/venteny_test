@@ -1,22 +1,144 @@
 pipeline {
     agent any
 
+    options {
+        disableConcurrentBuilds()
+        timeout(time: 60, unit: 'MINUTES')
+    }
+
+    environment {
+        REPOSITORY_URL    = 'https://github.com/yonakris98/venteny_test.git'
+        REPOSITORY_BRANCH = 'main'
+
+        FLUTTER_HOME = 'C:\\flutter'
+
+        SPARROW_HOME = 'C:\\Yonatan\\Sparrow\\StealienIndonesia\\sparrow-enterprise-client-windows-2606.1'
+        SPARROW_SERVER = 'https://192.168.100.103:10880'
+
+        SPARROW_PROJECT_KEY = 'project-1'
+        SPARROW_PROFILE     = 'All Tasks and Detection Rules'
+    }
+
     stages {
+
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: "${REPOSITORY_BRANCH}",
+                    url: "${REPOSITORY_URL}"
+            }
+        }
+
+        stage('Prepare') {
+            steps {
+                bat '''
+                git config --global --add safe.directory C:/flutter
+                '''
             }
         }
 
         stage('Flutter Version') {
             steps {
                 bat '''
-                git config --global --add safe.directory C:/flutter
                 "C:\\flutter\\bin\\flutter.bat" --version
                 '''
             }
         }
 
+        /*
+        Uncomment setelah dependency project sudah diperbaiki.
+
+        stage('Flutter Pub Get') {
+            steps {
+                bat '"C:\\flutter\\bin\\flutter.bat" pub get'
+            }
+        }
+
+        stage('Flutter Analyze') {
+            steps {
+                bat '"C:\\flutter\\bin\\flutter.bat" analyze'
+            }
+        }
+
+        stage('Flutter Build') {
+            steps {
+                bat '"C:\\flutter\\bin\\flutter.bat" build apk --debug'
+            }
+        }
+        */
+
+        stage('Sparrow SAST Analysis') {
+
+            steps {
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'sparrow-admin',
+                        usernameVariable: 'SPARROW_USER',
+                        passwordVariable: 'SPARROW_PASS'
+                    )
+                ]) {
+
+                    powershell '''
+
+                    $ErrorActionPreference = "Stop"
+
+                    $cli = Join-Path `
+                        $env:SPARROW_HOME `
+                        "sparrow-cli.cmd"
+
+                    if (!(Test-Path $cli)) {
+                        throw "Sparrow CLI not found : $cli"
+                    }
+
+                    Write-Host "===== SPARROW ANALYSIS ====="
+
+                    & $cli `
+                        create analysis `
+                        -k $env:SPARROW_PROJECT_KEY `
+                        -s $env:SPARROW_SERVER `
+                        -u $env:SPARROW_USER `
+                        -p $env:SPARROW_PASS `
+                        --type full `
+                        --profile $env:SPARROW_PROFILE `
+                        --target-type file `
+                        --path $env:WORKSPACE `
+                        --extension dart `
+                        --tag Jenkins
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Sparrow Scan Failed."
+                    }
+
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+
+        success {
+            echo '==================================='
+            echo 'Pipeline SUCCESS'
+            echo 'Sparrow Scan Submitted'
+            echo '==================================='
+        }
+
+        failure {
+            echo '==================================='
+            echo 'Pipeline FAILED'
+            echo 'Check Console Output'
+            echo '==================================='
+        }
+
+        always {
+            cleanWs()
+        }
     }
 }
