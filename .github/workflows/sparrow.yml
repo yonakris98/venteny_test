@@ -1,0 +1,65 @@
+name: Sparrow DevSecOps
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+
+jobs:
+  security:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.0"
+
+      - name: Flutter Pub Get
+        run: flutter pub get
+
+      - name: Generate Source
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Flutter Analyze
+        run: flutter analyze
+
+      - name: Flutter Test
+        run: flutter test
+
+      ###################################################
+      ## Sparrow SAST
+      ###################################################
+
+      - name: Sparrow SAST Scan
+        run: |
+          ./sparrow-cli scan \
+            --project venteny_test \
+            --server ${{ secrets.SPARROW_SERVER }} \
+            --user ${{ secrets.SPARROW_USER }} \
+            --password ${{ secrets.SPARROW_PASSWORD }} \
+            .
+
+      ###################################################
+      ## Sparrow SCA
+      ###################################################
+
+      - name: Sparrow SCA Scan
+        run: |
+          ./sparrow-sca scan .
+
+      ###################################################
+      ## Security Gate
+      ###################################################
+
+      - name: Check Security Result
+        run: |
+          ./check-security.sh
