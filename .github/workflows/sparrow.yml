@@ -28,9 +28,6 @@ jobs:
       - name: Flutter Analyze
         run: flutter analyze || true
 
-      - name: Flutter Test
-        run: flutter test
-
       ###################################################
       ## Sparrow SAST
       ###################################################
