@@ -21,7 +21,6 @@ pipeline {
     }
 
     stages {
-
         stage('Clean Workspace') {
             steps {
                 deleteDir()
@@ -68,6 +67,18 @@ pipeline {
         }
         */
 
+        stage('Test Sparrow Connection') {
+            steps {
+                powershell '''
+
+        Write-Host "Testing Sparrow Server..."
+
+        Test-NetConnection 192.168.100.103 -Port 10880
+
+        '''
+            }
+        }
+
         stage('Sparrow SAST Analysis') {
             steps {
                 powershell '''
@@ -109,11 +120,9 @@ $password
                 '''
             }
         }
-
     }
 
     post {
-
         success {
             echo '========================================'
             echo 'Pipeline SUCCESS'
