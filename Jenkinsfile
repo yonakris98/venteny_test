@@ -16,7 +16,8 @@ pipeline {
         SPARROW_SERVER = 'https://192.168.100.103:10880'
 
         SPARROW_PROJECT_KEY = 'project-1'
-        SPARROW_PROFILE     = 'All Tasks and Detection Rules'
+        SPARROW_PROFILE = 'All Tasks and Detection Rules'
+        SPARROW_USER = 'admin'
     }
 
     stages {
@@ -36,23 +37,18 @@ pipeline {
 
         stage('Prepare') {
             steps {
-                bat '''
-                git config --global --add safe.directory C:/flutter
-                '''
+                bat 'git config --global --add safe.directory C:/flutter'
             }
         }
 
         stage('Flutter Version') {
             steps {
-                bat '''
-                "C:\\flutter\\bin\\flutter.bat" --version
-                '''
+                bat '"C:\\flutter\\bin\\flutter.bat" --version'
             }
         }
 
+        // Aktifkan lagi nanti jika dependency Flutter sudah beres
         /*
-        Uncomment setelah dependency project sudah diperbaiki.
-
         stage('Flutter Pub Get') {
             steps {
                 bat '"C:\\flutter\\bin\\flutter.bat" pub get'
@@ -73,68 +69,64 @@ pipeline {
         */
 
         stage('Sparrow SAST Analysis') {
-
             steps {
+                powershell '''
 
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'sparrow-admin',
-                        usernameVariable: 'SPARROW_USER',
-                        passwordVariable: 'SPARROW_PASS'
-                    )
-                ]) {
+                $ErrorActionPreference = "Stop"
 
-                    powershell '''
+                $cli = Join-Path $env:SPARROW_HOME "sparrow-cli.cmd"
 
-                    $ErrorActionPreference = "Stop"
-
-                    $cli = Join-Path `
-                        $env:SPARROW_HOME `
-                        "sparrow-cli.cmd"
-
-                    if (!(Test-Path $cli)) {
-                        throw "Sparrow CLI not found : $cli"
-                    }
-
-                    Write-Host "===== SPARROW ANALYSIS ====="
-
-                    & $cli `
-                        create analysis `
-                        -k $env:SPARROW_PROJECT_KEY `
-                        -s $env:SPARROW_SERVER `
-                        -u $env:SPARROW_USER `
-                        -p $env:SPARROW_PASS `
-                        --type full `
-                        --profile $env:SPARROW_PROFILE `
-                        --target-type file `
-                        --path $env:WORKSPACE `
-                        --extension dart `
-                        --tag Jenkins
-
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Sparrow Scan Failed."
-                    }
-
-                    '''
+                if (!(Test-Path $cli)) {
+                    throw "Sparrow CLI not found: $cli"
                 }
+
+                Write-Host "====================================="
+                Write-Host "Starting Sparrow SAST Analysis..."
+                Write-Host "====================================="
+
+                $password = "1Q2w3e4r!"
+
+                $command = @"
+$password
+"@
+
+                $command | & $cli `
+                    create analysis `
+                    -s $env:SPARROW_SERVER `
+                    -u $env:SPARROW_USER `
+                    -k $env:SPARROW_PROJECT_KEY `
+                    --type full `
+                    --profile "$env:SPARROW_PROFILE" `
+                    --target-type file `
+                    --path "$env:WORKSPACE" `
+                    --extension dart `
+                    --tag "Jenkins"
+
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Sparrow Scan Failed."
+                }
+
+                '''
             }
         }
+
     }
 
     post {
 
         success {
-            echo '==================================='
+            echo '========================================'
             echo 'Pipeline SUCCESS'
+            echo 'Flutter Build OK'
             echo 'Sparrow Scan Submitted'
-            echo '==================================='
+            echo '========================================'
         }
 
         failure {
-            echo '==================================='
+            echo '========================================'
             echo 'Pipeline FAILED'
             echo 'Check Console Output'
-            echo '==================================='
+            echo '========================================'
         }
 
         always {
