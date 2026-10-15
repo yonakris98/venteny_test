@@ -46,7 +46,6 @@ pipeline {
             }
         }
 
-        // Aktifkan lagi nanti jika dependency Flutter sudah beres
         /*
         stage('Flutter Pub Get') {
             steps {
