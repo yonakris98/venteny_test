@@ -253,18 +253,10 @@ packages:
     dependency: "direct main"
     description:
       name: dio
-      sha256: "253a18bbd4851fecba42f7343a1df3a9a4c1d31a2c1b37e221086b4fa8c8dbc9"
+      sha256: "7d328c4d898a61efc3cd93655a0955858e29a0aa647f0f9e02d59b3bb275e2e8"
       url: "https://pub.dev"
     source: hosted
-    version: "5.8.0+1"
-  dio_web_adapter:
-    dependency: transitive
-    description:
-      name: dio_web_adapter
-      sha256: "9e57d2be4f358d416c9d382e95f5f8d39a2c4da7c8a39dfd02ecae9c9bd4cd61"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
+    version: "4.0.6"
   fake_async:
     dependency: transitive
     description:
@@ -310,6 +302,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.0.0"
+  flutter_downloader:
+    dependency: "direct main"
+    description:
+      name: flutter_downloader
+      sha256: "2b126083d2e6b7c09755bca12012c4c734bcf7666cf07ba00c508fcb83e8d0d7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.11.1"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
